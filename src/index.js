@@ -1,40 +1,56 @@
-import {Point, toLocalPoint} from './utils';
-import Mark from './Mark'
+import {Point, Rect} from "./utils";
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-const imagePath = 'assets/man.png';
-
-const reDrawState = (ctx, image, marks) => {
-    const canvas = ctx.canvas;
-    canvas.width = image.width;
-    canvas.height = image.height;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, 0, 0);
-    marks.forEach(mark => mark.draw());
+const state = {
+    image: 'assets/woman.png',
+    // marks: [new Point(197, 0), new Point(593, 0), new Point(396, 0)]
+    marks: [new Point(957, 0), new Point(1473, 0), new Point(415, 0)]
 };
 
-let marks = [];
+if (!state.image || state.marks.length !== 3) {
+    console.warn('Wrong initial state');
+}
+
+const marks = state.marks.slice().sort((p1, p2) => p1.x - p2.x);
 const image = new Image();
-image.src = imagePath;
+image.src = state.image;
+
+const calcBeforeAfter = (marks, image) => {
+    const beforeWidth = marks[1].x;
+    const afterX = beforeWidth + 1;
+    const hDelta = marks[2].x - afterX - marks[0].x;
+
+    return [
+        new Rect(0, 0, beforeWidth, image.height),
+        new Rect(afterX + hDelta, 0, image.width + hDelta - beforeWidth, image.height),
+    ];
+};
+
+const redrawStateFn = (ctx, image, before, after) => fill => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.drawImage(image, 0, 0, before.width, before.height, 0, 0, before.width, before.height);
+    ctx.drawImage(image, after.x, after.y, fill, after.height, 0, 0, fill, after.height);
+};
+
 image.addEventListener('load', (e) => {
-    reDrawState(ctx, e.target, marks);
-});
+    const [before, after] = calcBeforeAfter(marks, e.target);
+    const segments = 10;
+    const redrawState = redrawStateFn(ctx, e.target, before, after);
 
-canvas.addEventListener('click', (e) => {
-    let clickPosition = toLocalPoint(e.target, new Point(e.clientX, e.clientY));
-    let markIndex = marks.findIndex(mark => mark.contains(clickPosition));
+    canvas.height = before.height;
+    canvas.width = before.width;
 
-    if (markIndex !== -1) {
-        marks.splice(markIndex, 1);
-        reDrawState(ctx, image, marks);
-    } else if (marks.length < 3) {
-        marks.push( new Mark(ctx, clickPosition, 10) );
-        reDrawState(ctx, image, marks);
-    }
+    redrawState(0);
 
-    console.log(marks);
+    const overlayRange = document.getElementById('overlay');
+    overlayRange.max = before.width.toString();
+    overlayRange.step = (before.width / segments).toString();
+
+    overlayRange.addEventListener('input', (e) => {
+        const fill = Number.parseFloat(e.target.value);
+        redrawState(fill);
+    });
 });
 
