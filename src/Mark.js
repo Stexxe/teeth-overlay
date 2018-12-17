@@ -8,18 +8,25 @@ export default class Mark {
     }
 
     contains(point) {
-        return (this.position.x - this.size / 2  <= point.x && point.x <= this.position.x + this.size / 2)
-            && (this.position.y - this.size / 2 <= point.y && point.y <= this.position.y + this.size / 2);
+        const pos = this.position.valuePoint(...this.canvasSize());
+        point = point.valuePoint(...this.canvasSize());
+
+        return (pos.x - this.size / 2 <= point.x && point.x <= pos.x + this.size / 2)
+            && (pos.y - this.size / 2 <= point.y && point.y <= pos.y + this.size / 2);
     }
 
     draw() {
         this.ctx.save();
 
         this.ctx.fillStyle = 'blue';
-        let position = center(this.position, this.size, this.size);
+        let position = center(this.position.valuePoint(...this.canvasSize()), this.size, this.size);
         this.ctx.rect(position.x, position.y, this.size, this.size);
         this.ctx.fill();
 
         this.ctx.restore();
+    }
+
+    canvasSize() {
+        return [this.ctx.canvas.width, this.ctx.canvas.height];
     }
 }

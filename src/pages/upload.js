@@ -1,8 +1,8 @@
+import {assert} from "../utils";
+
 const showUpload = state => {
-    return new Promise((resolve, reject) => {
-        if ( !(state.root) ) {
-            return reject('I need root element');
-        }
+    return new Promise((resolve) => {
+        assert(state.root, 'I need root element');
 
         state.root.innerHTML = `
         <label for="photo">Upload before and after PNG</label>
@@ -21,7 +21,8 @@ const showUpload = state => {
                 image.addEventListener('load', e => {
                     resolve({
                         ...state,
-                        image: e.target
+                        image: e.target,
+                        scale: state.maxHeight ? state.maxHeight / e.target.height : 1.0
                     })
                 });
             }

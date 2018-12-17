@@ -1,45 +1,36 @@
-import {Rect} from "../utils";
+import {assert} from "../utils";
 
-const calcBeforeAfter = (marks, image) => {
+const redrawStateFn = (ctx, image, scale, marks) => fill => {
     const beforeWidth = marks[1].x;
-    const afterX = beforeWidth + 1;
-    const hDelta = marks[2].x - afterX - marks[0].x;
+    const hDelta = marks[2].x - beforeWidth - marks[0].x;
+    const afterStartX = beforeWidth + hDelta;
 
-    return [
-        new Rect(0, 0, beforeWidth, image.height),
-        new Rect(afterX + hDelta, 0, image.width + hDelta - beforeWidth, image.height),
-    ];
-};
+    ctx.canvas.width = scale * beforeWidth * image.width;
+    ctx.canvas.height = scale * image.height;
 
-const redrawStateFn = (ctx, image, before, after) => fill => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(image, 0, 0, before.width, before.height, 0, 0, before.width, before.height);
-    ctx.drawImage(image, after.x, after.y, fill, after.height, 0, 0, fill, after.height);
+    ctx.drawImage(image, 0, 0, beforeWidth * image.width, image.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.drawImage(image, afterStartX * image.width, 0, fill * image.width, image.height, 0, 0, fill * image.width * scale, image.height * scale);
 };
 
 const showPreview = state => {
-    return new Promise((resolve, reject) => {
-        if (!state.image || state.marks.length !== 3) {
-            reject('I need image and marks');
-        }
+    return new Promise(() => {
+        assert(state.image && state.marks.length === 3, 'I need image and marks');
 
         const marks = state.marks.slice().sort((p1, p2) => p1.x - p2.x);
-        const [before, after] = calcBeforeAfter(marks, state.image);
-        const step = (before.width / 10);
+        const width = marks[1].x;
+        const step = width / 10;
 
         state.root.innerHTML = `
             <canvas id="canvas"></canvas>
             <div class="panel">
-                <input id="overlay" type="range" min="0" max="${before.width}" step="${step}" value="0">
+                <input id="overlay" type="range" min="0" max="${width}" step="${step}" value="0">
             </div>
         `;
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const redrawState = redrawStateFn(ctx, state.image, before, after);
-
-        canvas.height = before.height;
-        canvas.width = before.width;
+        const redrawState = redrawStateFn(ctx, state.image, state.scale, marks);
 
         redrawState(0);
 

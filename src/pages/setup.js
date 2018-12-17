@@ -1,51 +1,56 @@
-import {Point, toLocalPoint, createEl} from '../utils';
+import {assert, Point} from '../utils';
 import Mark from '../Mark'
 
-const reDrawState = (ctx, image, marks) => {
+const reDrawStateFn = (ctx, image, state) => marks => {
     const canvas = ctx.canvas;
-    canvas.width = image.width;
-    canvas.height = image.height;
+    canvas.width = state.scale * image.width;
+    canvas.height = state.scale * image.height;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, 0, 0);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     marks.forEach(mark => mark.draw());
 };
 
 const showSetup = state => {
-    return new Promise((resolve, reject) => {
-        if ( !(state.image && state.root) ) {
-            return reject('I need path to image and root element');
-        }
+    return new Promise((resolve) => {
+        assert(state.image && state.root, 'I need path to image and root element');
 
-        const canvas = document.createElement('canvas');
-        state.root.appendChild(canvas);
+        state.root.innerHTML = `
+        <canvas id="canvas"></canvas>
+        <div class="panel">
+            <h4>Click on image and set 3 points: the same eye on both images and border between images</h4>
+            <button id="proceed">Process overlay</button>
+        </div>
+        `;
+
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
         let marks = [];
         const image = state.image;
+        const reDrawState = reDrawStateFn(ctx, image, state);
 
-        reDrawState(ctx, image, marks);
+        reDrawState(marks);
 
         canvas.addEventListener('click', e => {
-            let clickPosition = toLocalPoint(e.target, new Point(e.clientX, e.clientY));
-            let markIndex = marks.findIndex(mark => mark.contains(clickPosition));
+            let canvasRect = e.target.getBoundingClientRect();
+
+            const relPoint = new Point(e.clientX, e.clientY)
+                .relativeTo( new Point(canvasRect.x, canvasRect.y) )
+                .scaleFactorPoint(canvasRect.width, canvasRect.height);
+
+            let markIndex = marks.findIndex(mark => mark.contains(relPoint));
 
             if (markIndex !== -1) {
                 marks.splice(markIndex, 1);
-                reDrawState(ctx, image, marks);
+                reDrawState(marks);
             } else if (marks.length < 3) {
-                marks.push( new Mark(ctx, clickPosition, 10) );
-                reDrawState(ctx, image, marks);
+                marks.push( new Mark(ctx, relPoint, 10) );
+                reDrawState(marks);
             }
         });
 
-        let panel = createEl('div', {className: 'panel'});
-        let proceedButton = createEl('button', {innerText: 'Process overlay'});
-
-        panel.appendChild(proceedButton);
-        state.root.insertBefore(panel, canvas.nextSibling);
-
-        proceedButton.addEventListener('click', e => {
+        document.getElementById('proceed').addEventListener('click', e => {
             e.preventDefault();
             resolve({
                 ...state,

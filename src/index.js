@@ -1,20 +1,6 @@
-import showUpload from './pages/upload';
-import showSetup from './pages/setup';
-import showPreview from './pages/preview';
+import imageOverlay from './widget';
 
-const root = document.getElementById('root');
-
-const clearPage = (state) => {
-    root.innerHTML = '';
-    return state;
-};
-
-showUpload({
-    root: root,
-}).then(clearPage)
-    .then(showSetup)
-    .then(clearPage)
-    .then(showPreview)
-    .catch(err => {
-        console.warn(err);
-    });
+imageOverlay({
+    root: document.getElementById('root'),
+    maxHeight: 400
+});

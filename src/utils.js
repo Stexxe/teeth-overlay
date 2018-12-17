@@ -1,33 +1,28 @@
-export class Rect {
-    constructor(x, y, width, height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-    }
-}
-
 export class Point {
     constructor(x, y) {
         this.x = x;
         this.y = y;
     }
-}
 
-export const toLocalPoint = (el, globalPoint) => {
-    const absPosition = el.getBoundingClientRect();
-    return new Point(globalPoint.x - absPosition.x, globalPoint.y - absPosition.y);
-};
+    relativeTo(point) {
+        return new Point(this.x - point.x, this.y - point.y);
+    }
+
+    scaleFactorPoint(xVal, yVal) {
+        return new Point(this.x / xVal, this.y / yVal);
+    }
+
+    valuePoint(xVal, yVal) {
+        return new Point(this.x * xVal, this.y * yVal);
+    }
+}
 
 export const center = (position, width, height) => {
     return new Point(position.x - width / 2, position.y - height / 2);
 };
 
-export const createEl = (tag, attrs, children) => {
-    const el = document.createElement(tag);
-    Object.keys(attrs).forEach(name => {
-        el[name] = attrs[name]
-    });
-
-    return el;
+export const assert = (cond, msg) => {
+    if (!cond) {
+        throw msg;
+    }
 };
