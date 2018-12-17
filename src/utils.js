@@ -22,3 +22,12 @@ export const toLocalPoint = (el, globalPoint) => {
 export const center = (position, width, height) => {
     return new Point(position.x - width / 2, position.y - height / 2);
 };
+
+export const createEl = (tag, attrs, children) => {
+    const el = document.createElement(tag);
+    Object.keys(attrs).forEach(name => {
+        el[name] = attrs[name]
+    });
+
+    return el;
+};
