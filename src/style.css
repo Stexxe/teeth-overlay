@@ -1,0 +1,23 @@
+.io-btn {
+    background: #6a7fec;
+    color: white;
+    border: 0;
+    border-radius: 9px;
+    padding: 4px 23px;
+    cursor: pointer;
+    outline: none;
+}
+
+.io-file-upload input[type=file] {
+    width: 0;
+    height: 0;
+    opacity: 0;
+}
+
+.io-text-group {
+    margin-bottom: 15px;
+}
+
+.io-text-group p {
+    margin: 4px 0;
+}

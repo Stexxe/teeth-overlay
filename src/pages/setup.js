@@ -1,6 +1,8 @@
 import {assert, Point} from '../utils';
 import Mark from '../Mark'
 
+const MARKS_COUNT = 3;
+
 const reDrawStateFn = (ctx, image, state) => marks => {
     const canvas = ctx.canvas;
     canvas.width = state.scale * image.width;
@@ -18,8 +20,8 @@ const showSetup = state => {
         state.root.innerHTML = `
         <canvas id="canvas"></canvas>
         <div class="panel">
-            <h4>Click on image and set 3 points: the same eye on both images and border between images</h4>
-            <button id="proceed">Process overlay</button>
+            <p>Click on image and set ${MARKS_COUNT} points: the same eye on both images and border between images</p>
+            <button id="proceed" class="io-btn">Process overlay</button>
         </div>
         `;
 
@@ -44,14 +46,18 @@ const showSetup = state => {
             if (markIndex !== -1) {
                 marks.splice(markIndex, 1);
                 reDrawState(marks);
-            } else if (marks.length < 3) {
-                marks.push( new Mark(ctx, relPoint, 10) );
+            } else if (marks.length < MARKS_COUNT) {
+                marks.push( new Mark(ctx, relPoint, 5) );
                 reDrawState(marks);
             }
         });
 
         document.getElementById('proceed').addEventListener('click', e => {
             e.preventDefault();
+            if (marks.length !== MARKS_COUNT) {
+                return alert(`Please set ${MARKS_COUNT} marks to proceed`);
+            }
+
             resolve({
                 ...state,
                 marks: marks.map(mark => mark.position)

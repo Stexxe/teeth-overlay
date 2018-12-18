@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "watch": "webpack --watch --mode development"
+    "watch": "webpack --watch --mode development",
+    "build": "webpack --mode production"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +13,7 @@
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.0",
     "babel-loader": "^8.0.4",
+    "css-loader": "^2.0.1",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2"
   }

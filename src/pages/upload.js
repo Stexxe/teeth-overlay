@@ -5,11 +5,23 @@ const showUpload = state => {
         assert(state.root, 'I need root element');
 
         state.root.innerHTML = `
-        <label for="photo">Upload before and after PNG</label>
-        <input id="photo" type="file">
+        <div class="io-text-group">
+            <p><strong>Upload before and after png</strong></p>
+            <p>(note this is a single png that contains the before and after photos)</p>
+        </div>
+        <div class="io-file-upload">
+            <button class="io-btn" id="io-upload-btn">Upload</button>
+            <input id="io-photo" type="file">
+        </div>
         `;
 
-        document.getElementById('photo').addEventListener('change', e => {
+        const photoUploader = document.getElementById('io-photo');
+
+        document.getElementById('io-upload-btn').addEventListener('click', () => {
+            photoUploader.click();
+        });
+
+        photoUploader.addEventListener('change', e => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.readAsDataURL(file);
