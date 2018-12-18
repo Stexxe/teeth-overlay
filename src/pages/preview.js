@@ -18,10 +18,15 @@ const redrawStateFn = (ctx, image, scaleF, marks, scanner) => fill => {
         0, 0, ctx.canvas.width, ctx.canvas.height);
 
     const HORIZONTAL_GAP = 0.05;
-    fill = (fill + 2 * HORIZONTAL_GAP > afterWidthF ? afterWidthF - 2 * HORIZONTAL_GAP : fill);
-    ctx.drawImage(image,
-        scale(image.width, afterStartX + HORIZONTAL_GAP), 0, scale(image.width, fill), image.height,
-        scale(image.width, scaleF, HORIZONTAL_GAP), 0, scale(image.width, scaleF, fill), scale(image.height, scaleF));
+
+    if (fill !== 0) {
+        fill = (fill + 2 * HORIZONTAL_GAP > afterWidthF ? afterWidthF - 2 * HORIZONTAL_GAP : fill);
+
+        if (fill)
+            ctx.drawImage(image,
+                scale(image.width, afterStartX + HORIZONTAL_GAP), 0, scale(image.width, fill), image.height,
+                scale(image.width, scaleF, HORIZONTAL_GAP), 0, scale(image.width, scaleF, fill), scale(image.height, scaleF));
+    }
 
     // scanner.render();
 };
@@ -37,8 +42,7 @@ const showPreview = state => {
         state.root.innerHTML = `
             <canvas id="io-canvas"></canvas>
             <div class="panel">
-                <div id="io-scanner"></div>
-                <input id="io-overlay" type="range" min="0" max="${width}" step="${step}" value="0">
+                <input class="io-slider" id="io-overlay" type="range" min="0" max="${width}" step="${step}" value="0">
             </div>
         `;
 
@@ -50,7 +54,10 @@ const showPreview = state => {
 
         redrawState(0);
 
-        document.getElementById('io-overlay').addEventListener('input', (e) => {
+        const rangeEl = document.getElementById('io-overlay');
+        rangeEl.style.width = `${canvas.width}px`;
+
+        rangeEl.addEventListener('input', (e) => {
             const fill = Number.parseFloat(e.target.value);
             redrawState(fill);
         });
