@@ -10,14 +10,28 @@ const imageOverlay = (options) => {
     cssEl.innerHTML = css.toString();
     document.body.appendChild(cssEl);
 
-    showUpload(options)
-        .then(clear)
-        .then(showSetup)
-        .then(clear)
-        .then(showPreview)
-        .catch(err => {
-            console.warn(err);
+    const pages = {
+        'upload': showUpload,
+        'setup': showSetup,
+        'preview': showPreview,
+    };
+
+    if (options.page) {
+        const fn = pages[options.page.name];
+        fn({
+            ...options.page.state,
+            ...options
         });
+    } else {
+        showUpload(options)
+            .then(clear)
+            .then(showSetup)
+            .then(clear)
+            .then(showPreview)
+            .catch(err => {
+                console.warn(err);
+            });
+    }
 };
 
 export default imageOverlay;

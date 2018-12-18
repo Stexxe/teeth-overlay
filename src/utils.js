@@ -26,3 +26,6 @@ export const assert = (cond, msg) => {
         throw msg;
     }
 };
+
+export const sqr = x => x * x;
+export const insideCircle = (center, rad, point) => sqr(point.x - center.x) + sqr(point.y - center.y) <= sqr(rad);

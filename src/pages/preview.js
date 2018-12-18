@@ -1,8 +1,9 @@
 import {assert} from "../utils";
+import Scanner from "../scanner/index"
 
 const scale = (val, ...factors) => val * factors.reduce((acc, x) => acc * x, 1);
 
-const redrawStateFn = (ctx, image, scaleF, marks) => fill => {
+const redrawStateFn = (ctx, image, scaleF, marks, scanner) => fill => {
     const beforeWidthF = marks[1].x;
     const hDelta = marks[2].x - beforeWidthF - marks[0].x;
     const afterStartX = beforeWidthF + hDelta;
@@ -21,11 +22,13 @@ const redrawStateFn = (ctx, image, scaleF, marks) => fill => {
     ctx.drawImage(image,
         scale(image.width, afterStartX + HORIZONTAL_GAP), 0, scale(image.width, fill), image.height,
         scale(image.width, scaleF, HORIZONTAL_GAP), 0, scale(image.width, scaleF, fill), scale(image.height, scaleF));
+
+    // scanner.render();
 };
 
 const showPreview = state => {
     return new Promise(() => {
-        assert(state.image && state.marks.length === 3, 'I need image and marks');
+        assert(state.root && state.image && state.marks.length === 3, 'I need root element, image and marks');
 
         const marks = state.marks.slice().sort((p1, p2) => p1.x - p2.x);
         const width = marks[1].x;
@@ -34,13 +37,16 @@ const showPreview = state => {
         state.root.innerHTML = `
             <canvas id="io-canvas"></canvas>
             <div class="panel">
+                <div id="io-scanner"></div>
                 <input id="io-overlay" type="range" min="0" max="${width}" step="${step}" value="0">
             </div>
         `;
 
         const canvas = document.getElementById('io-canvas');
         const ctx = canvas.getContext('2d');
-        const redrawState = redrawStateFn(ctx, state.image, state.scale, marks);
+        const scale = state.scale || 1.0;
+        let scanner = new Scanner(ctx);
+        const redrawState = redrawStateFn(ctx, state.image, scale, marks, scanner);
 
         redrawState(0);
 

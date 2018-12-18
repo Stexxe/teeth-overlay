@@ -1,6 +1,4 @@
 import imageOverlay from './widget';
 
-imageOverlay({
-    root: document.getElementById('root'),
-    maxHeight: 400
-});
+let global = typeof global === 'object' ? global : window;
+global.imageOverlay = imageOverlay;

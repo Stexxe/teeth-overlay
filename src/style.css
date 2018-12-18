@@ -1,3 +1,7 @@
+#io-canvas {
+    cursor: pointer;
+}
+
 .io-btn {
     background: #6a7fec;
     color: white;
@@ -21,3 +25,24 @@
 .io-text-group p {
     margin: 4px 0;
 }
+
+/* Scanner styles */
+/*
+.io-scanner-wrapper {
+    !*position: absolute;*!
+}
+
+.io-circle-control {
+    width: 24px;
+    height: 24px;
+    background: #fd598e;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.io-stick {
+    height: 300px;
+    width: 1px;
+    margin: 0 auto;
+    background: black;
+}*/
