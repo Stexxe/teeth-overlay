@@ -1,16 +1,26 @@
 import {assert} from "../utils";
 
-const redrawStateFn = (ctx, image, scale, marks) => fill => {
-    const beforeWidth = marks[1].x;
-    const hDelta = marks[2].x - beforeWidth - marks[0].x;
-    const afterStartX = beforeWidth + hDelta;
+const scale = (val, ...factors) => val * factors.reduce((acc, x) => acc * x, 1);
 
-    ctx.canvas.width = scale * beforeWidth * image.width;
-    ctx.canvas.height = scale * image.height;
+const redrawStateFn = (ctx, image, scaleF, marks) => fill => {
+    const beforeWidthF = marks[1].x;
+    const hDelta = marks[2].x - beforeWidthF - marks[0].x;
+    const afterStartX = beforeWidthF + hDelta;
+    const afterWidthF = 1.0 - afterStartX;
+
+    ctx.canvas.width = scale(image.width, scaleF, beforeWidthF);
+    ctx.canvas.height = scale(image.height, scaleF);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(image, 0, 0, beforeWidth * image.width, image.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(image, afterStartX * image.width, 0, fill * image.width, image.height, 0, 0, fill * image.width * scale, image.height * scale);
+    ctx.drawImage(image,
+        0, 0, scale(image.width, beforeWidthF), image.height,
+        0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    const HORIZONTAL_GAP = 0.05;
+    fill = (fill + 2 * HORIZONTAL_GAP > afterWidthF ? afterWidthF - 2 * HORIZONTAL_GAP : fill);
+    ctx.drawImage(image,
+        scale(image.width, afterStartX + HORIZONTAL_GAP), 0, scale(image.width, fill), image.height,
+        scale(image.width, scaleF, HORIZONTAL_GAP), 0, scale(image.width, scaleF, fill), scale(image.height, scaleF));
 };
 
 const showPreview = state => {

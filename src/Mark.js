@@ -18,7 +18,7 @@ export default class Mark {
     draw() {
         this.ctx.save();
 
-        this.ctx.fillStyle = '#004d0b';
+        this.ctx.fillStyle = '#2FA804';
         let position = center(this.position.valuePoint(...this.canvasSize()), this.size, this.size);
         this.ctx.rect(position.x, position.y, this.size, this.size);
         this.ctx.fill();
