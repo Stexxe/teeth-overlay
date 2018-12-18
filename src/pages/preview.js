@@ -32,19 +32,19 @@ const showPreview = state => {
         const step = width / 10;
 
         state.root.innerHTML = `
-            <canvas id="canvas"></canvas>
+            <canvas id="io-canvas"></canvas>
             <div class="panel">
-                <input id="overlay" type="range" min="0" max="${width}" step="${step}" value="0">
+                <input id="io-overlay" type="range" min="0" max="${width}" step="${step}" value="0">
             </div>
         `;
 
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('io-canvas');
         const ctx = canvas.getContext('2d');
         const redrawState = redrawStateFn(ctx, state.image, state.scale, marks);
 
         redrawState(0);
 
-        document.getElementById('overlay').addEventListener('input', (e) => {
+        document.getElementById('io-overlay').addEventListener('input', (e) => {
             const fill = Number.parseFloat(e.target.value);
             redrawState(fill);
         });

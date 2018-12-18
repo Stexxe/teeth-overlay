@@ -18,14 +18,14 @@ const showSetup = state => {
         assert(state.image && state.root, 'I need path to image and root element');
 
         state.root.innerHTML = `
-        <canvas id="canvas"></canvas>
-        <div class="panel">
+        <canvas id="io-canvas"></canvas>
+        <div>
             <p>Click on image and set ${MARKS_COUNT} points: the same eye on both images and border between images</p>
-            <button id="proceed" class="io-btn">Process overlay</button>
+            <button id="io-proceed" class="io-btn">Process overlay</button>
         </div>
         `;
 
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('io-canvas');
         const ctx = canvas.getContext('2d');
 
         let marks = [];
@@ -52,7 +52,7 @@ const showSetup = state => {
             }
         });
 
-        document.getElementById('proceed').addEventListener('click', e => {
+        document.getElementById('io-proceed').addEventListener('click', e => {
             e.preventDefault();
             if (marks.length !== MARKS_COUNT) {
                 return alert(`Please set ${MARKS_COUNT} marks to proceed`);
