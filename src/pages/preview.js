@@ -1,9 +1,8 @@
 import {assert} from "../utils";
-import Scanner from "../scanner/index"
 
 const scale = (val, ...factors) => val * factors.reduce((acc, x) => acc * x, 1);
 
-const redrawStateFn = (ctx, image, scaleF, marks, scanner) => fill => {
+const redrawStateFn = (ctx, image, scaleF, marks) => fill => {
     const beforeWidthF = marks[1].x;
     const hDelta = marks[2].x - beforeWidthF - marks[0].x;
     const afterStartX = beforeWidthF + hDelta;
@@ -27,8 +26,6 @@ const redrawStateFn = (ctx, image, scaleF, marks, scanner) => fill => {
                 scale(image.width, afterStartX + HORIZONTAL_GAP), 0, scale(image.width, fill), image.height,
                 scale(image.width, scaleF, HORIZONTAL_GAP), 0, scale(image.width, scaleF, fill), scale(image.height, scaleF));
     }
-
-    // scanner.render();
 };
 
 const showPreview = state => {
@@ -37,20 +34,19 @@ const showPreview = state => {
 
         const marks = state.marks.slice().sort((p1, p2) => p1.x - p2.x);
         const width = marks[1].x;
-        const step = width / 10;
+        const rangeMax = 100;
 
         state.root.innerHTML = `
             <canvas id="io-canvas"></canvas>
             <div class="panel">
-                <input class="io-slider" id="io-overlay" type="range" min="0" max="${width}" step="${step}" value="0">
+                <input class="io-slider" id="io-overlay" type="range" min="0" step="10" value="0" max="${rangeMax}">
             </div>
         `;
 
         const canvas = document.getElementById('io-canvas');
         const ctx = canvas.getContext('2d');
         const scale = state.scale || 1.0;
-        let scanner = new Scanner(ctx);
-        const redrawState = redrawStateFn(ctx, state.image, scale, marks, scanner);
+        const redrawState = redrawStateFn(ctx, state.image, scale, marks);
 
         redrawState(0);
 
@@ -58,8 +54,8 @@ const showPreview = state => {
         rangeEl.style.width = `${canvas.width}px`;
 
         rangeEl.addEventListener('input', (e) => {
-            const fill = Number.parseFloat(e.target.value);
-            redrawState(fill);
+            const fill = Number.parseInt(e.target.value, 10);
+            redrawState(fill / rangeMax * width);
         });
     });
 };

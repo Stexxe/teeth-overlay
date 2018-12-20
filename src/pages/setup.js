@@ -3,21 +3,47 @@ import Mark from '../Mark'
 
 const MARKS_COUNT = 3;
 
-const reDrawStateFn = (ctx, image, state) => marks => {
+const reDrawStateFn = (ctx, image, scale) => (marks, zoom) => {
     const canvas = ctx.canvas;
-    canvas.width = state.scale * image.width;
-    canvas.height = state.scale * image.height;
+    canvas.width = scale * image.width;
+    canvas.height = scale * image.height;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     marks.forEach(mark => mark.draw());
+
+    if (zoom) {
+        const zoomX = zoom.position.x;
+        const zoomY = zoom.position.y;
+
+        ctx.save();
+        ctx.drawImage(canvas,
+            zoomX - zoom.size / 2 / zoom.scale, zoomY - zoom.size / 2 / zoom.scale, zoom.size / zoom.scale, zoom.size / zoom.scale,
+            zoomX + 16, zoomY + 16, zoom.size, zoom.size
+        );
+
+        ctx.beginPath();
+        ctx.fillStyle = "blue";
+        const crossHairSize = 3;
+        ctx.rect(zoomX + 16 + zoom.size / 2 - crossHairSize / 2, zoomY + 16 + zoom.size / 2 - crossHairSize / 2, crossHairSize, crossHairSize);
+        ctx.fill();
+        ctx.closePath();
+
+        ctx.restore();
+    }
 };
 
-const showSetup = state => {
-    return new Promise((resolve) => {
-        assert(state.image && state.root, 'I need path to image and root element');
+const getZoom = (point) => ({
+    position: point,
+    scale: 8,
+    size: 64
+});
 
-        state.root.innerHTML = `
+const showSetup = ({root, image, scale = 1, markSize = 1}) => {
+    return new Promise((resolve) => {
+        assert(image && root, 'I need an image and root element');
+
+        root.innerHTML = `
         <canvas id="io-canvas"></canvas>
         <div>
             <p>Click on image and set ${MARKS_COUNT} points: the same eye on both images and border between images</p>
@@ -29,27 +55,34 @@ const showSetup = state => {
         const ctx = canvas.getContext('2d');
 
         let marks = [];
-        const image = state.image;
-        const reDrawState = reDrawStateFn(ctx, image, state);
+        const reDrawState = reDrawStateFn(ctx, image, scale);
 
         reDrawState(marks);
 
+        const canvasRect = canvas.getBoundingClientRect();
+
         canvas.addEventListener('click', e => {
-            let canvasRect = e.target.getBoundingClientRect();
+            const relPoint =  new Point(e.clientX, e.clientY)
+                .relativeTo( new Point(canvasRect.x, canvasRect.y) );
 
-            const relPoint = new Point(e.clientX, e.clientY)
-                .relativeTo( new Point(canvasRect.x, canvasRect.y) )
-                .scaleFactorPoint(canvasRect.width, canvasRect.height);
+            const scalePoint = relPoint.scaleFactorPoint(canvasRect.width, canvasRect.height);
 
-            let markIndex = marks.findIndex(mark => mark.contains(relPoint));
+            let markIndex = marks.findIndex(mark => mark.contains(scalePoint));
 
             if (markIndex !== -1) {
                 marks.splice(markIndex, 1);
-                reDrawState(marks);
+                reDrawState( marks, getZoom(relPoint) );
             } else if (marks.length < MARKS_COUNT) {
-                marks.push( new Mark(ctx, relPoint, 5) );
-                reDrawState(marks);
+                marks.push( new Mark(ctx, scalePoint, markSize) );
+                reDrawState( marks, getZoom(relPoint) );
             }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            const relPoint = new Point(e.clientX, e.clientY)
+                .relativeTo( new Point(canvasRect.x, canvasRect.y) );
+
+            reDrawState(marks, getZoom(relPoint));
         });
 
         document.getElementById('io-proceed').addEventListener('click', e => {
@@ -59,7 +92,7 @@ const showSetup = state => {
             }
 
             resolve({
-                ...state,
+                ...{root, image, scale},
                 marks: marks.map(mark => mark.position)
             })
         });
