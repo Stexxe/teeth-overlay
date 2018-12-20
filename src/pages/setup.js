@@ -3,33 +3,35 @@ import Mark from '../Mark'
 
 const MARKS_COUNT = 3;
 
-const reDrawStateFn = (ctx, image, scale) => (marks, zoom) => {
+const drawZoom = (ctx, {position, size, scale = 1}) => {
+    ctx.save();
+    ctx.translate(position.x, position.y);
+    ctx.drawImage(ctx.canvas,
+        position.x - size / 2 / scale, position.y - size / 2 / scale, size / scale, size / scale,
+        16, 16, size, size
+    );
+
+    ctx.beginPath();
+    ctx.fillStyle = "blue";
+    const crossHairSize = 3;
+    ctx.rect(16 + size / 2 - crossHairSize / 2, 16 + size / 2 - crossHairSize / 2, crossHairSize, crossHairSize);
+    ctx.fill();
+    ctx.closePath();
+
+    ctx.restore();
+};
+
+const reDrawStateFn = (ctx, image) => (marks, zoom) => {
     const canvas = ctx.canvas;
-    canvas.width = scale * image.width;
-    canvas.height = scale * image.height;
+    canvas.width = image.width;
+    canvas.height = image.height;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     marks.forEach(mark => mark.draw());
 
     if (zoom) {
-        const zoomX = zoom.position.x;
-        const zoomY = zoom.position.y;
-
-        ctx.save();
-        ctx.drawImage(canvas,
-            zoomX - zoom.size / 2 / zoom.scale, zoomY - zoom.size / 2 / zoom.scale, zoom.size / zoom.scale, zoom.size / zoom.scale,
-            zoomX + 16, zoomY + 16, zoom.size, zoom.size
-        );
-
-        ctx.beginPath();
-        ctx.fillStyle = "blue";
-        const crossHairSize = 3;
-        ctx.rect(zoomX + 16 + zoom.size / 2 - crossHairSize / 2, zoomY + 16 + zoom.size / 2 - crossHairSize / 2, crossHairSize, crossHairSize);
-        ctx.fill();
-        ctx.closePath();
-
-        ctx.restore();
+        drawZoom(ctx, zoom);
     }
 };
 
@@ -39,14 +41,19 @@ const getZoom = (point) => ({
     size: 64
 });
 
-const showSetup = ({root, image, scale = 1, markSize = 1}) => {
+const actualPosition = (event, canvas) => {
+    const canvasRect = canvas.getBoundingClientRect();
+    return new Point(event.clientX - canvasRect.x, event.clientY - canvasRect.y);
+};
+
+const showSetup = ({root, image, height, markSize = 1}) => {
     return new Promise((resolve) => {
         assert(image && root, 'I need an image and root element');
 
         root.innerHTML = `
         <canvas id="io-canvas"></canvas>
         <div>
-            <p>Click on image and set ${MARKS_COUNT} points: the same eye on both images and border between images</p>
+            <p>Click on image and set ${MARKS_COUNT} points: the same eye's point on both images</p>
             <button id="io-proceed" class="io-btn">Process overlay</button>
         </div>
         `;
@@ -55,34 +62,27 @@ const showSetup = ({root, image, scale = 1, markSize = 1}) => {
         const ctx = canvas.getContext('2d');
 
         let marks = [];
-        const reDrawState = reDrawStateFn(ctx, image, scale);
+        const reDrawState = reDrawStateFn(ctx, image);
 
         reDrawState(marks);
 
-        const canvasRect = canvas.getBoundingClientRect();
-
         canvas.addEventListener('click', e => {
-            const relPoint =  new Point(e.clientX, e.clientY)
-                .relativeTo( new Point(canvasRect.x, canvasRect.y) );
+            const position =  actualPosition(e, canvas);
 
-            const scalePoint = relPoint.scaleFactorPoint(canvasRect.width, canvasRect.height);
-
-            let markIndex = marks.findIndex(mark => mark.contains(scalePoint));
+            let markIndex = marks.findIndex(mark => mark.contains(position));
 
             if (markIndex !== -1) {
                 marks.splice(markIndex, 1);
-                reDrawState( marks, getZoom(relPoint) );
+                reDrawState( marks, getZoom(position) );
             } else if (marks.length < MARKS_COUNT) {
-                marks.push( new Mark(ctx, scalePoint, markSize) );
-                reDrawState( marks, getZoom(relPoint) );
+                marks.push( new Mark(ctx, position, markSize) );
+                reDrawState( marks, getZoom(position) );
             }
         });
 
         canvas.addEventListener('mousemove', e => {
-            const relPoint = new Point(e.clientX, e.clientY)
-                .relativeTo( new Point(canvasRect.x, canvasRect.y) );
-
-            reDrawState(marks, getZoom(relPoint));
+            const position =  actualPosition(e, canvas);
+            reDrawState(marks, getZoom(position));
         });
 
         document.getElementById('io-proceed').addEventListener('click', e => {
@@ -92,8 +92,8 @@ const showSetup = ({root, image, scale = 1, markSize = 1}) => {
             }
 
             resolve({
-                ...{root, image, scale},
-                marks: marks.map(mark => mark.position)
+                ...{root, image, height},
+                marks: marks.map(mark => mark.position),
             })
         });
 

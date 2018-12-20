@@ -34,7 +34,6 @@ const showUpload = state => {
                     resolve({
                         ...state,
                         image: e.target,
-                        scale: state.maxHeight ? state.maxHeight / e.target.height : 1.0
                     })
                 });
             }
