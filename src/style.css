@@ -26,6 +26,10 @@
     margin: 4px 0;
 }
 
+#io-overlay {
+    display: none;
+}
+
 .io-slider {
     -webkit-appearance: none;
     margin: 0;

@@ -1,4 +1,31 @@
-import {assert} from "../utils";
+import {assert, Point} from "../utils";
+
+const moveVert = (direction) => (position, distance) => new Point(position.x, position.y + direction * distance);
+const distance = (velocity) => (time) => velocity * time;
+
+const moveDown = moveVert(1);
+
+const animateFor = ({onFrame, onFinish, time}) => {
+    const loop = (launchTime, totalTime = 0) => {
+        const currentTime = new Date().getTime();
+
+        const frameId = requestAnimationFrame(() => {
+            const elapsed = currentTime - launchTime;
+
+            if (totalTime > time) {
+                onFinish();
+                return cancelAnimationFrame(frameId);
+            }
+
+            onFrame(elapsed);
+            loop(currentTime, totalTime + elapsed);
+        });
+
+
+    };
+
+    loop( new Date().getTime() );
+};
 
 const redrawStateFn = (ctx, image, [left, middle, right]) => fill => {
     const beforeWidthF = middle.x;
@@ -11,7 +38,7 @@ const redrawStateFn = (ctx, image, [left, middle, right]) => fill => {
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.drawImage(image,
-        0, 0, beforeWidthF, image.height,
+        0, 0, ctx.canvas.width, ctx.canvas.height,
         0, 0, ctx.canvas.width, ctx.canvas.height);
 
     const GAP_PERCENT = 0.05;
@@ -30,7 +57,6 @@ const redrawStateFn = (ctx, image, [left, middle, right]) => fill => {
 const showPreview = ({root, image, marks, height}) => {
     return new Promise(() => {
         assert(root && image && marks && marks.length === 3, 'I need root element, image and marks');
-
         marks = marks.slice().sort((p1, p2) => p1.x - p2.x);
         const rangeMax = marks[1].x;
 
@@ -55,6 +81,37 @@ const showPreview = ({root, image, marks, height}) => {
             const fill = Number.parseFloat(e.target.value);
             redrawState(fill);
         });
+
+        const totalTime = 2000;
+        const distanceByTime = distance(canvas.height / totalTime);
+
+        let from = new Point(0, 0);
+        let to = new Point(canvas.width, 0);
+        animateFor({onFrame: (elapsed) => {
+                from = moveDown(from, distanceByTime(elapsed));
+                to = moveDown(to, distanceByTime(elapsed));
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.drawImage(image,
+                    0, 0, canvas.width, canvas.height,
+                    0, 0, canvas.width, ctx.canvas.height);
+
+                ctx.save();
+                ctx.strokeStyle = '#00ffff';
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+                ctx.restore();
+            }, onFinish: () => {
+                rangeEl.style.display = 'inline-block';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.drawImage(image,
+                    0, 0, canvas.width, canvas.height,
+                    0, 0, canvas.width, ctx.canvas.height);
+            }, time: totalTime});
     });
 };
 
