@@ -1,8 +1,9 @@
-import {addEvent, appendChildren, createEl} from "./dom";
+import {addEvent, appendChildren, appendCSS, createModifiedEl, loadImage} from "./dom";
+const style = require("./style.css");
 
 const root = document.getElementById("root") as HTMLElement;
 
-const createPrefixed = createEl((attr, val) => {
+const createPrefixed = createModifiedEl((attr, val) => {
     if (attr === "className" || attr === "id") { return "io-" + val; }
 });
 
@@ -15,9 +16,16 @@ addEvent(uploadBtn, "click", (e) => {
 });
 
 addEvent(uploadInput, "change", (e) => {
+    const files = (e.target as HTMLInputElement).files;
 
+    if (files && files.length > 0) {
+        loadImage( files[0] ).then((img) => {
+            console.log(img.width);
+        });
+    }
 });
 
+appendCSS(style);
 appendChildren(root,
     [createPrefixed("div", {className: "text-group"}, [
         createPrefixed("p", {className: "strong", innerText: "Upload before and after png"}),

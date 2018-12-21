@@ -1,6 +1,8 @@
 type AttrModify = (attr: string, val: any) => any;
 
-export const createEl = (modifyAttr: AttrModify) => (tag: string, attrs: any = {}, children: HTMLElement[] = []) => {
+export const createModifiedEl =
+    (modifyAttr: AttrModify) => (tag: string, attrs: any = {}, children: HTMLElement[] = []) => {
+
     const el = document.createElement(tag);
 
     Object.entries(attrs).forEach(([key, val]) => {
@@ -10,6 +12,8 @@ export const createEl = (modifyAttr: AttrModify) => (tag: string, attrs: any = {
 
     return appendChildren(el, children);
 };
+
+export const createEl = createModifiedEl((n, v) => v);
 
 const insertAfter = (parent: HTMLElement, newElem: HTMLElement, refElem: HTMLElement | null = null): HTMLElement => {
     if (refElem === null) {
@@ -32,4 +36,27 @@ export const appendChildren = (parent: HTMLElement, children: HTMLElement[]): HT
 
 export const addEvent = (el: HTMLElement, type: string, fn: (event: Event) => void) => {
     el.addEventListener(type, fn);
+};
+
+export const appendCSS = (css: object) => {
+    return appendChildren(document.head, [
+        createEl("style", {innerHTML: css.toString()}),
+    ]);
+};
+
+export const loadImage = (file: File): Promise<HTMLImageElement> => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    return new Promise((resolve, reject) => {
+        reader.onload = () => {
+            if (reader.result) {
+                const image = new Image();
+                image.src = reader.result as string;
+                image.onload = (e) => resolve(e.target as HTMLImageElement);
+            }
+        };
+
+        reader.onerror = reject;
+    });
 };
