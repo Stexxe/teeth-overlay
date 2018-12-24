@@ -7,7 +7,7 @@ interface InputType {
     maxHeight?: number;
 }
 
-export interface OutputType {
+interface OutputType {
     root: HTMLElement;
     maxHeight?: number;
     image: HTMLImageElement;

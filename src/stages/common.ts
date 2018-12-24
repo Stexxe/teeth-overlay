@@ -2,9 +2,8 @@ import {appendCSS, createModifiedEl, removeClassFn} from "../dom";
 
 const CLASS_PREFIX = "io-";
 
-const style = require("../style.css");
 export const appendStyles = () => {
-    appendCSS(style);
+    appendCSS( require("../style.css") );
 };
 
 export const createEl = createModifiedEl((attr, val) => {

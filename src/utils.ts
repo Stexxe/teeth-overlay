@@ -22,7 +22,6 @@ export type Rect = [number, number, number, number];
 
 export const center = ([x, y]: Point, [width, height]: Dimension) => [x - width / 2, y - height / 2];
 
-
 type FrameAnimationFn = (elapsed: number, totalTime: number) => void;
 type FinishAnimationFn = () => void;
 
