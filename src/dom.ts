@@ -34,7 +34,7 @@ export const appendChildren = (parent: HTMLElement, children: HTMLElement[]): HT
     return parent;
 };
 
-export const addEvent = (el: HTMLElement, type: string, fn: (event: Event) => void) => {
+export const addEvent = (el: HTMLElement, type: string, fn: EventListener) => {
     el.addEventListener(type, fn);
 };
 
@@ -44,16 +44,23 @@ export const appendCSS = (css: object) => {
     ]);
 };
 
-export const loadImage = (file: File): Promise<HTMLImageElement> => {
+export const loadImage = (src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.src = src;
+        image.onload = (e) => resolve(e.target as HTMLImageElement);
+        image.onerror = reject;
+    });
+};
+
+export const loadImageFromBlob = (file: File): Promise<HTMLImageElement> => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
     return new Promise((resolve, reject) => {
         reader.onload = () => {
             if (reader.result) {
-                const image = new Image();
-                image.src = reader.result as string;
-                image.onload = (e) => resolve(e.target as HTMLImageElement);
+                return loadImage(reader.result as string);
             }
         };
 
