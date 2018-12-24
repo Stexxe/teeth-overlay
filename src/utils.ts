@@ -21,3 +21,27 @@ export type Dimension = [number, number];
 export type Rect = [number, number, number, number];
 
 export const center = ([x, y]: Point, [width, height]: Dimension) => [x - width / 2, y - height / 2];
+
+type FrameAnimationFn = (elapsed: number, totalTime: number) => void;
+type FinishAnimationFn = () => void;
+
+
+export const animate = (onFrame: FrameAnimationFn, onFinish: FinishAnimationFn, time: number) => {
+    const loop = (launchTime: number, totalTime = 0) => {
+        const currentTime = new Date().getTime();
+
+        const frameId = requestAnimationFrame(() => {
+            const elapsed = currentTime - launchTime;
+
+            if (totalTime > time) {
+                onFinish();
+                return cancelAnimationFrame(frameId);
+            }
+
+            onFrame(elapsed, time);
+            loop(currentTime, totalTime + elapsed);
+        });
+    };
+
+    loop( new Date().getTime() );
+};

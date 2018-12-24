@@ -1,4 +1,4 @@
-type AttrModify = (attr: string, val: any) => any;
+type AttrModify = (attr: string, val: string) => any;
 
 export const createModifiedEl =
     (modifyAttr: AttrModify) => (tag: string, attrs: any = {}, children: HTMLElement[] = []) => {
@@ -6,7 +6,7 @@ export const createModifiedEl =
     const el = document.createElement(tag);
 
     Object.entries(attrs).forEach(([key, val]) => {
-        const modifiedVal = modifyAttr(key as string, val);
+        const modifiedVal = modifyAttr(key as string, val as string);
         (el as any)[key] = typeof modifiedVal === "undefined" ? val : modifiedVal;
     });
 
@@ -32,6 +32,10 @@ export const appendChildren = (parent: HTMLElement, children: HTMLElement[]): HT
     });
 
     return parent;
+};
+
+export const removeClassFn = (modify: (cls: string) => string) => (el: HTMLElement, className: string) => {
+    el.classList.remove(modify(className));
 };
 
 export const addEvent = (el: HTMLElement, type: string, fn: EventListener) => {

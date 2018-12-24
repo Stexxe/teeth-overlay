@@ -1,5 +1,10 @@
+/* io - Image overlay */
 .io-strong {
     font-weight: bold;
+}
+
+.io-hidden {
+    display: none;
 }
 
 #io-canvas {
@@ -28,10 +33,6 @@
 
 .io-text-group p {
     margin: 4px 0;
-}
-
-#io-overlay {
-    display: none;
 }
 
 .io-slider {

@@ -1,11 +1,13 @@
 import {addEvent, appendChildren} from "../dom";
 import {Mark} from "../Mark";
+import {Point} from "../Point";
 import {defineStage} from "../stage";
-import {Dimension, Rect} from "../utils";
-import {appendStyles, createEl, setRenderState} from "./common";
+import {animate, Dimension, Rect} from "../utils";
+import {appendStyles, createEl, removeClass, setRenderState} from "./common";
 
 interface InputType {
     root: HTMLElement;
+    maxHeight: number;
     image: HTMLImageElement;
     marks: Mark[];
 }
@@ -15,6 +17,7 @@ type SourceTargetRect = [Rect, Rect];
 interface StateType {
     image: HTMLImageElement;
     after: SourceTargetRect;
+    loading: [Point, Point];
 }
 
 const beforeDimension = (image: HTMLImageElement, [left, middle]: number[]): Dimension => {
@@ -38,7 +41,17 @@ const afterSourceTargetFn =
 };
 
 
-const renderState = (ctx: CanvasRenderingContext2D, {image, after}: StateType) => {
+const renderLoading = (ctx: CanvasRenderingContext2D, [fx, fy]: Point, [tx, ty]: Point) => {
+    ctx.save();
+    ctx.strokeStyle = "#00ffff";
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.restore();
+};
+
+const renderState = (ctx: CanvasRenderingContext2D, {image, after, loading: [from, to]}: StateType) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.drawImage(image,
         0, 0, ctx.canvas.width, ctx.canvas.height,
@@ -46,16 +59,12 @@ const renderState = (ctx: CanvasRenderingContext2D, {image, after}: StateType) =
 
     const [[sx, sy, sw, sh], [tx, ty, tw, wh]] = after;
     ctx.drawImage(image, sx, sy, sw, sh, tx, ty, tw, wh);
+    renderLoading(ctx, from, to);
 };
 
-export const previewStage = defineStage<InputType, any>(({root, image, marks}, pass) => {
+export const previewStage = defineStage<InputType, any>(({root, image, marks, maxHeight}) => {
     const marksX = marks.sort(([x1], [x2]) => x1 - x2).map(([x]) => x);
     const afterSourceTarget = afterSourceTargetFn(marksX, [image.width, image.height]);
-
-    let state: StateType = {
-        after: afterSourceTarget(0),
-        image,
-    };
 
     const makeOverlay = (overlay: number): StateType => {
         return setRenderState<StateType>(state, {after: afterSourceTarget(overlay)}, (s) => renderState(ctx, s));
@@ -64,8 +73,9 @@ export const previewStage = defineStage<InputType, any>(({root, image, marks}, p
     appendStyles();
 
     const canvas = createEl("canvas") as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     const rangeInput = createEl("input",
-        {className: "slider", type: "range", min: "0", value: "0"},
+        {className: "slider hidden", type: "range", min: "0", value: "0"},
     ) as HTMLInputElement;
 
     appendChildren(root, [
@@ -77,13 +87,27 @@ export const previewStage = defineStage<InputType, any>(({root, image, marks}, p
         makeOverlay(overlayAmount);
     });
 
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const [width, height] = beforeDimension(image, marksX);
-    canvas.width = width;
-    canvas.height = height;
+    [canvas.width, canvas.height] = beforeDimension(image, marksX);
+    canvas.style.height = `${maxHeight}px`;
 
-    rangeInput.max = width.toString();
+    let state: StateType = {
+        after: afterSourceTarget(0),
+        image,
+        loading: [[0, 0], [canvas.width, 0]],
+    };
+
+    rangeInput.max = canvas.width.toString();
     rangeInput.style.width = `${canvas.offsetWidth}px`;
 
-    makeOverlay(0);
+    animate((elapsed, totalTime) => {
+        const [[fx, fy], [tx, ty]] = state.loading;
+        const speed = canvas.height / totalTime;
+        const nextY = fy + elapsed * speed;
+
+        state = setRenderState(state, {
+            loading: [[fx, nextY], [tx, nextY]],
+        }, (s) => renderState(ctx, s));
+    }, () => {
+        removeClass(rangeInput, "hidden");
+    }, 2000);
 });
