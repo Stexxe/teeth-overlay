@@ -5,9 +5,9 @@ import {defineStage} from "../stage";
 import {animate, Dimension, Rect} from "../utils";
 import {appendStyles, createEl, removeClass, setRenderState} from "./common";
 
-interface InputType {
+export interface InputType {
     root: HTMLElement;
-    maxHeight: number;
+    maxHeight?: number;
     image: HTMLImageElement;
     marks: Mark[];
 }
@@ -62,14 +62,13 @@ const renderState = (ctx: CanvasRenderingContext2D, {image, after, loading: [fro
     renderLoading(ctx, from, to);
 };
 
-export const previewStage = defineStage<InputType, any>(({root, image, marks, maxHeight}) => {
+export const stage = defineStage<InputType, any>(({root, image, marks, maxHeight}) => {
     const marksX = marks.sort(([x1], [x2]) => x1 - x2).map(([x]) => x);
     const afterSourceTarget = afterSourceTargetFn(marksX, [image.width, image.height]);
 
     const makeOverlay = (overlay: number): StateType => {
         return setRenderState<StateType>(state, {after: afterSourceTarget(overlay)}, (s) => renderState(ctx, s));
     };
-
     appendStyles();
 
     const canvas = createEl("canvas") as HTMLCanvasElement;
@@ -88,7 +87,7 @@ export const previewStage = defineStage<InputType, any>(({root, image, marks, ma
     });
 
     [canvas.width, canvas.height] = beforeDimension(image, marksX);
-    canvas.style.height = `${maxHeight}px`;
+    if (maxHeight) { canvas.style.height = `${maxHeight}px`; }
 
     let state: StateType = {
         after: afterSourceTarget(0),
@@ -100,7 +99,7 @@ export const previewStage = defineStage<InputType, any>(({root, image, marks, ma
     rangeInput.style.width = `${canvas.offsetWidth}px`;
 
     animate((elapsed, totalTime) => {
-        const [[fx, fy], [tx, ty]] = state.loading;
+        const [[fx, fy], [tx]] = state.loading;
         const speed = canvas.height / totalTime;
         const nextY = fy + elapsed * speed;
 

@@ -5,14 +5,16 @@ import {defineStage} from "../stage";
 import {append, center, localMousePosition, remove} from "../utils";
 import {appendStyles, createEl, setRenderState} from "./common";
 
-interface InputType {
+export interface InputType {
     root: HTMLElement;
     image: HTMLImageElement;
+    maxHeight?: number;
 }
 
 interface OutputType {
     root: HTMLElement;
     image: HTMLImageElement;
+    maxHeight?: number;
     marks: Mark[];
 }
 
@@ -61,7 +63,7 @@ function renderMark(ctx: CanvasRenderingContext2D, position: Mark, size = 1) {
     ctx.restore();
 }
 
-export const setupStage = defineStage<InputType, OutputType>(({root, image}, pass) => {
+export const stage = defineStage<InputType, OutputType>(({root, image, maxHeight}, pass) => {
     let state: StateType = {image, marks: []};
 
     appendStyles();
@@ -99,7 +101,7 @@ export const setupStage = defineStage<InputType, OutputType>(({root, image}, pas
             return alert(`Please set ${MARKS_TOTAL} marks to proceed`);
         }
 
-        pass({root, image, marks: state.marks});
+        pass({root, image, maxHeight, marks: state.marks});
     });
 
     canvas.width = image.width;

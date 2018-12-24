@@ -54,6 +54,7 @@ export const loadImage = (src: string): Promise<HTMLImageElement> => {
         image.src = src;
         image.onload = (e) => resolve(e.target as HTMLImageElement);
         image.onerror = reject;
+        return image;
     });
 };
 
@@ -64,7 +65,7 @@ export const loadImageFromBlob = (file: File): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
         reader.onload = () => {
             if (reader.result) {
-                return loadImage(reader.result as string);
+                return loadImage(reader.result as string).then(resolve);
             }
         };
 
