@@ -1,1 +1,1 @@
-## Widget for viewing before/after difference
+## Widget for viewing before/after difference of people
