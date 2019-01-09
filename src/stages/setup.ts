@@ -68,14 +68,16 @@ export const stage = defineStage<InputType, OutputType>(({root, image, maxHeight
 
     appendStyles();
 
-    const canvas = createEl("canvas") as HTMLCanvasElement;
+    const canvas = createEl("canvas", {className: "zoom-in"}) as HTMLCanvasElement;
     const proceedBtn = createEl("button", {className: "btn", innerText: "Process overlay"});
+    const resetBtn = createEl("button", {className: "btn reset-marks", innerText: "Remove points"});
 
     appendChildren(root, [
         canvas,
         createEl("div", {}, [
             createEl("p", {innerText: "Click on image and set 3 points: border and the same eye on both images"}),
             proceedBtn,
+            resetBtn,
         ]),
     ]);
 
@@ -89,19 +91,39 @@ export const stage = defineStage<InputType, OutputType>(({root, image, maxHeight
         state = setRenderState(state, {marks}, (s) => renderState(ctx, s));
     });
 
+    let timeoutID: number;
+    const delayedZoom = true;
     addEvent(canvas, "mousemove", (e) => {
         const position = localMousePosition(e as MouseEvent, canvas);
-        state = setRenderState(state, {zoom: position}, (s) => renderState(ctx, s));
+        const render = () => {
+            state = setRenderState(state, {zoom: position}, (s) => renderState(ctx, s));
+        };
+
+        if (delayedZoom) {
+            if (timeoutID) {
+                clearTimeout(timeoutID);
+            }
+
+            // @ts-ignore
+            timeoutID = setTimeout(render, 500);
+        } else {
+            render();
+        }
     });
 
     addEvent(proceedBtn, "click", (e) => {
         e.preventDefault();
 
         if (state.marks.length !== MARKS_TOTAL) {
-            return alert(`Please set ${MARKS_TOTAL} marks to proceed`);
+            return alert(`Please set ${MARKS_TOTAL} points to proceed`);
         }
 
         pass({root, image, maxHeight, marks: state.marks});
+    });
+
+    addEvent(resetBtn, "click", (e) => {
+        e.preventDefault();
+        state = setRenderState(state, {marks: []}, (s) => renderState(ctx, s));
     });
 
     canvas.width = image.width;
