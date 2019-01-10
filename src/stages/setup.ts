@@ -92,7 +92,7 @@ export const stage = defineStage<InputType, OutputType>(({root, image, maxHeight
     });
 
     let timeoutID: number;
-    const delayedZoom = true;
+    const delayedZoom = false;
     addEvent(canvas, "mousemove", (e) => {
         const position = localMousePosition(e as MouseEvent, canvas);
         const render = () => {
