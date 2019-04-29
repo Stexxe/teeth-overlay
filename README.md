@@ -1,3 +1,3 @@
-## Widget for viewing before/after difference of people
+## Face overlay widget
 
 To build use `npm run build`
